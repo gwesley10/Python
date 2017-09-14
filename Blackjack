@@ -23,13 +23,16 @@ def startHand():
     card4 = randint(0, 48)
     P4 = deck[card4]
     deck.pop(card4)
+
     global phand
     phand = [P1, P3]
     human.setHand(phand)
     print (human.hand)
     print(human.findHandValue())
+
     global dhand
     dhand = [P2, P4]
+    dealer.setHand(dhand)
     print (['*HIDDEN*', P4])
 
 class Player(object):
@@ -74,11 +77,52 @@ class Game(object):
     def __init__(self):
         pass
 
+    def dealerTurn(self,dealerObject):
+        print ("Reveal!")
+        print (dhand)
+        dealervalue = dealerObject.findHandValue()
+        while dealervalue < 17:
+            dealerObject.hit()
+            dealervalue = dealerObject.findHandValue()
+
+
+class Dealer(object):
+    def __init__(self):
+        pass
+
+    def setHand(self,hand):
+        self.hand = hand
+
+    def findHandValue(self):
+        tempval = 0
+        for card in self.hand:
+            if card[1:] == 'J' or card[1:] == 'Q' or card[1:] == 'K':
+                tempval += 10
+            elif card[1:] == 'A':
+                Player.ace = True
+                tempval += 1
+            else:
+                tempnum = int(card[1:])
+                tempval += tempnum
+        if Player.ace == True and tempval < 12:
+            tempval += 10
+        return tempval
+
+    def hit(self):
+        global deck
+        tempnum = randint(0, deck.__len__()-1)
+        self.hand.append(deck[tempnum])
+        print (deck[tempnum])
+        deck.pop(tempnum)
+        print (self.hand)
+        print (self.findHandValue())
+
 
 
 pool = int(input("What is your starting money pool?"))
+game = Game()
 human = Player(pool)
-
+dealer = Dealer()
 
 
 while True:
@@ -100,37 +144,36 @@ while True:
             if human.findHandValue() > 21:
                 print ("BUST")
                 human.pool -= bet
-                print (human.pool)
+                message = "Remaining money pool is: " + str(human.pool)
+                print (message)
+                break
         elif move.lower() == "stay":
+            game.dealerTurn(dealer)
+            if dealer.findHandValue() > 21 or dealer.findHandValue() < human.findHandValue():
+                print ("You have won!")
+                human.pool += bet
+                message = "Remaining money pool is: " + str(human.pool)
+                print(message)
+            else:
+                print("You have lost!")
+                human.pool -= bet
+                message = "Remaining money pool is: " + str(human.pool)
+                print(message)
             break
 
-
-
-
+    end = False
     while True:
-        playagain = input('Would you like to play again? (yes or no')
+        playagain = input('Would you like to play again? (yes or no)')
         if playagain.lower() == 'yes':
+            print("Come and play again sometime!")
             break
         elif playagain.lower() == 'no':
+            end = True
             break
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    if end:
+        print ("Come and play again sometime!")
+        break
+    if human.pool == 0:
+        print("Come and play again sometime!")
+        break
