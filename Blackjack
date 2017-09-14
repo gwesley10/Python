@@ -1,0 +1,136 @@
+from random import randint
+deck = []
+phand = []
+dhand = []
+bet = 0
+
+def startHand():
+    global deck
+    deck =['S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'SJ', 'SQ', 'SK', 'SA',
+            'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'DJ', 'DQ', 'DK', 'DA',
+            'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10', 'HJ', 'HQ', 'HK', 'HA',
+            'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'CJ', 'CQ', 'CK', 'CA']
+
+    card1 = randint(0,51)
+    P1=deck[card1]
+    deck.pop(card1)
+    card2 = randint(0, 50)
+    P2 = deck[card2]
+    deck.pop(card2)
+    card3 = randint(0, 49)
+    P3 = deck[card3]
+    deck.pop(card3)
+    card4 = randint(0, 48)
+    P4 = deck[card4]
+    deck.pop(card4)
+    global phand
+    phand = [P1, P3]
+    human.setHand(phand)
+    print (human.hand)
+    print(human.findHandValue())
+    global dhand
+    dhand = [P2, P4]
+    print (['*HIDDEN*', P4])
+
+class Player(object):
+
+    ace = False
+    hand=[]
+
+    def __init__(self,pool):
+        self.pool = pool
+
+    def findHandValue(self):
+        tempval = 0
+        for card in self.hand:
+            if card[1:] == 'J' or card[1:] == 'Q' or card[1:] == 'K':
+                tempval += 10
+            elif card[1:] == 'A':
+                Player.ace = True
+                tempval += 1
+            else:
+                tempnum = int(card[1:])
+                tempval += tempnum
+        if Player.ace == True and tempval < 12:
+            tempval += 10
+        return tempval
+
+    def setHand(self,hand):
+        self.hand = hand
+
+    def hit(self):
+        global deck
+        tempnum = randint(0, deck.__len__()-1)
+        self.hand.append(deck[tempnum])
+        print (deck[tempnum])
+        deck.pop(tempnum)
+        print (self.findHandValue())
+
+
+    pass
+
+class Game(object):
+
+    def __init__(self):
+        pass
+
+
+
+pool = int(input("What is your starting money pool?"))
+human = Player(pool)
+
+
+
+while True:
+    try:
+        bet = int(input("How much would you like to bet?"))
+        if bet > human.pool:
+            print ("bet is larger than money pool")
+            print (human.pool)
+            continue
+    except:
+        print ("A number was not input")
+        continue
+    startHand()
+
+    while True:
+        move = input("Would you like to hit or stay?")
+        if move.lower() == 'hit':
+            human.hit()
+            if human.findHandValue() > 21:
+                print ("BUST")
+                human.pool -= bet
+                print (human.pool)
+        elif move.lower() == "stay":
+            break
+
+
+
+
+    while True:
+        playagain = input('Would you like to play again? (yes or no')
+        if playagain.lower() == 'yes':
+            break
+        elif playagain.lower() == 'no':
+            break
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
