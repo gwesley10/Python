@@ -1,0 +1,249 @@
+import numpy
+import pandas as pd
+from datetime import datetime
+
+
+from tkinter import *
+from tkcalendar import DateEntry
+from tkinter import ttk
+from tkinter.filedialog import askopenfilename
+
+
+firstDateObject = ''
+
+def openFile():
+    global filename
+    filename = askopenfilename()
+    temp.destroy()
+
+temp=Tk()
+openFile()
+
+
+def updateEntry(text):
+    entry.delete(0, END)
+    entry.insert(0, text)
+
+def employeeLookUp(firstName, lastName):
+
+
+    dataframe = pd.DataFrame(pd.read_csv(filename, parse_dates=True)).to_numpy()
+    index = 0
+    entryArray = []
+
+    for count in dataframe:
+        if dataframe[index, 1] == firstName:
+            if dataframe[index, 2] == lastName:
+                entryArray.append(dataframe[index, :])
+        index+=1
+
+    if not entryArray:
+        return "Name is not in our Database"
+    else:
+        return entryArray
+
+
+def employeeListByProfession(profession):
+    if profession == "":
+        return ("No one with entered profession is our Database")
+    dataframe = pd.DataFrame(pd.read_csv(filename, parse_dates=True)).to_numpy()
+    index = 0
+    professionArray = dataframe[:,4]
+    namesForProfessionArray = []
+
+    for specific_profession in professionArray:
+        if profession == specific_profession:
+            firstNameOfPerson = dataframe[index][1]
+            lastNameOfPerson = dataframe[index][2]
+            fullNameOfPerson = firstNameOfPerson + ' ' + lastNameOfPerson
+            namesForProfessionArray.append(fullNameOfPerson)
+        index+=1
+
+    if not namesForProfessionArray:
+        return('No one with entered profession is our Database')
+    else:
+        return(namesForProfessionArray)
+
+def professionListByCity(city):
+    if city == "":
+        return ("City is not in our Database")
+    dataframe = pd.DataFrame(pd.read_csv(filename, parse_dates=True)).to_numpy()
+    index = 0
+    cityArray = dataframe[:, 7]
+    professionsForCityArray = []
+
+    for specific_city in cityArray:
+        if city == specific_city:
+            profession = dataframe[index][4]
+            if profession not in professionsForCityArray:
+                professionsForCityArray.append(profession)
+        index += 1
+
+    if not professionsForCityArray:
+        return ('City is not in our Database')
+    else:
+        return (professionsForCityArray)
+
+def dateCreatedBetweenDates(dateRangeStart, dateRangeEnd):
+
+    if dateRangeStart > dateRangeEnd:
+        print('The first entered date is before the second entered date. Please switch the two dates positions')
+        return
+
+    dataframe = pd.DataFrame(pd.read_csv(filename, parse_dates=True)).to_numpy()
+
+    index = 0
+    datesArray = dataframe[:, 5]
+    namesForDateRange = []
+    for single_date in datesArray:
+        single_date_date_object = datetime.strptime(single_date, '%Y-%m-%d').date()
+        if dateRangeStart <= single_date_date_object:
+            if dateRangeEnd >= single_date_date_object:
+                firstNameOfPerson = dataframe[index][1]
+                lastNameOfPerson = dataframe[index][2]
+                fullNameOfPerson = firstNameOfPerson + ' ' + lastNameOfPerson
+                namesForDateRange.append(fullNameOfPerson)
+        index += 1
+    if not namesForDateRange:
+        return ('No one created an account between these two date in our Database')
+    else:
+        return (namesForDateRange)
+
+
+
+def buttonEmployeeLookUp():
+    firstNameInput = firstNameText.get("1.0", "end-1c")
+    lastNameInput = lastNameText.get("1.0", "end-1c")
+    personsInfo = employeeLookUp(firstNameInput, lastNameInput)
+    personsList = ""
+
+    if personsInfo == "Name is not in our Database":
+        updateEntry("Name is not in our Database")
+    else:
+        for entries in personsInfo:
+            personsList+=numpy.array2string(entries)
+        updateEntry(personsList)
+
+def buttonProfessionLookUp():
+    professionTextInput = professionText.get("1.0", "end-1c")
+    namesList = employeeListByProfession(professionTextInput.lower())
+    if namesList == "No one with entered profession is our Database":
+        updateEntry("No one with entered profession is our Database")
+    else:
+        namesText=''
+        for entries in namesList:
+            if namesList.index(entries) == len(namesList)-1:
+                namesText += entries
+            else:
+                namesText += entries + ", "
+        updateEntry(namesText)
+
+def buttonCityProfessions():
+    cityProfessionTextInput = cityProfessionsText.get("1.0", "end-1c")
+    namesList = professionListByCity(cityProfessionTextInput)
+    if namesList == "City is not in our Database":
+        updateEntry("City is not in our Database")
+    else:
+        namesText=''
+        for entries in namesList:
+            if namesList.index(entries) == len(namesList)-1:
+                namesText += entries
+            else:
+                namesText += entries + ", "
+        updateEntry(namesText)
+
+def setFirstDate():
+
+    firstDateObject = cal.get_date()
+    calendarLabel = Label(root, text="Select the SECOND DATE for the names of accounts created in the range")
+    cal2 = DateEntry(root, selectmode='day', year=2020, month=5, day=22)
+    calendarSecondDateButton = Button(root, text="Set Second Date", command=lambda: buttonCalendar(firstDateObject, cal2))
+
+    calendarLabel.pack()
+    cal2.pack()
+    calendarSecondDateButton.pack()
+
+def buttonCalendar(firstDate, cal2):
+    secondDateObect = cal2.get_date()
+    if firstDate > secondDateObect:
+        updateEntry("The first date is after the second date. Please swap the two dates")
+        return
+    namesBetweenDatesList = dateCreatedBetweenDates(firstDate, secondDateObect)
+    if namesBetweenDatesList == "No one created an account between these two date in our Database":
+        updateEntry("No one created an account between these two date in our Database")
+    else:
+        namesText = ''
+        for entries in namesBetweenDatesList:
+            if namesBetweenDatesList.index(entries) == len(namesBetweenDatesList) - 1:
+                namesText += entries
+            else:
+                namesText += entries + ", "
+        updateEntry(namesText)
+
+root = Tk()
+root.geometry("1000x900")
+root.title("Microservice")
+
+scrollLabel= Label(root, text="Results for your search: ")
+scrollLabel.pack(pady=50)
+scrollbar = Scrollbar(orient="horizontal")
+entry = Entry(root, xscrollcommand=scrollbar.set)
+entry.pack(pady=10, fill="x")
+scrollbar.pack(fill='x', pady= 50)
+scrollbar.config(command=entry.xview)
+
+firstNameLabel = Label(root, text="Type the FIRST NAME of the person you want to look up:")
+firstNameText = Text(root, height=1, width=20)
+lastNameLabel = Label(root, text="Type the LAST NAME of the person you want to look up:")
+lastNameText = Text(root, height=1, width=20)
+nameButton = Button(root, text="Name Look Up", command=buttonEmployeeLookUp)
+
+professionTextLabel = Label(root, text="Type the PROFESSION that you want a list of all names associated:")
+professionText = Text(root, height=1, width=20)
+professionButton = Button(root, text="Names With Profession", command=buttonProfessionLookUp)
+
+cityProfessionsLabel = Label(root, text="Type the CITY that you want to see the professions of people that live there(case sensitive)")
+cityProfessionsText = Text(root, height=1, width=20)
+cityProfessionsButton = Button(root, text="Professions by City", command=buttonCityProfessions)
+
+calendarLabel = Label(root, text="Select the FIRST DATE for the names of accounts created in the range")
+cal = DateEntry(root, selectmode='day', year=2020, month=5, day=22)
+calendarFirstDateButton = Button(root, text="Set First Date", command=setFirstDate)
+
+firstDate = Label(root, text = "")
+
+seperator1 = ttk.Separator(root, orient="horizontal")
+seperator1.pack(fill="x")
+
+firstNameLabel.pack()
+firstNameText.pack(pady = 10)
+lastNameLabel.pack()
+lastNameText.pack(pady = 10)
+nameButton.pack(pady = 10)
+
+seperator2 = ttk.Separator(root, orient="horizontal")
+seperator2.pack(fill="x")
+
+professionTextLabel.pack()
+professionText.pack(pady = 10)
+professionButton.pack(pady = 10)
+
+seperator3 = ttk.Separator(root, orient="horizontal")
+seperator3.pack(fill="x")
+
+cityProfessionsLabel.pack()
+cityProfessionsText.pack(pady = 10)
+cityProfessionsButton.pack(pady = 10)
+
+seperator4 = ttk.Separator(root, orient="horizontal")
+seperator4.pack(fill="x")
+
+calendarLabel.pack()
+cal.pack(pady=10)
+calendarFirstDateButton.pack()
+
+
+
+firstDate.pack(pady = 20)
+
+root.mainloop()
